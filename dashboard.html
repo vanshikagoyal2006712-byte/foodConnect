@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gamification for Donors — Gamification for Donors</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* small custom styles for badge states */
+    .badge-locked { filter: grayscale(90%) opacity(0.6); transform: scale(0.95); }
+    .badge-unlocked { transform: translateY(-4px) scale(1.03); box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+    .pulse { animation: pulse 1.6s infinite; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  </style>
+</head>
+<body class="bg-gray-50 text-slate-800 leading-normal">
+  <div class="max-w-6xl mx-auto p-6">
+    <header class="mb-8">
+      <h1 class="text-3xl font-extrabold">Gamification for Donors</h1>
+      <p class="mt-2 text-gray-600">Badges, achievement levels and leaderboards to motivate restaurants to donate more.</p>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left: Badges & Progress -->
+      <section class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm">
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 class="text-xl font-semibold">Restaurant profile</h2>
+            <p class="text-sm text-gray-500">Track donations, earned badges and achievement level.</p>
+          </div>
+          <div class="text-right">
+            <button id="resetBtn" class="text-sm text-red-600 hover:underline">Reset sample data</button>
+          </div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Restaurant card -->
+<div class="p-4 border rounded-lg text-center">
+  <div class="flex flex-col items-center">
+    <img src="spice.jpeg" alt="Spice & Serve Restaurant" >
+    <div>
+      <h3 id="restName" class="font-semibold text-lg">Spice & Serve</h3>
+      <p class="text-sm text-gray-500">Location: Mumbai</p>
+    </div>
+  </div>
+</div>
+
+            <div class="mt-4">
+              <div class="flex items-baseline justify-between">
+                <div>
+                  <div class="text-xs text-gray-500">Meals donated</div>
+                  <div id="mealsCount" class="text-2xl font-bold">0</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-xs text-gray-500">Achievement</div>
+                  <div id="achievementLabel" class="font-semibold">Novice Donor</div>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div id="progressBar" class="h-3 rounded-full" style="width:0%; background:linear-gradient(90deg,#34d399,#60a5fa);"></div>
+                </div>
+                <div class="mt-1 text-xs text-gray-500">Progress to next badge</div>
+              </div>
+
+              <div class="mt-4 flex items-center gap-2">
+                <button id="donate1" class="px-3 py-1 rounded-md bg-green-500 text-white text-sm">+1 meal</button>
+                <button id="donate5" class="px-3 py-1 rounded-md bg-blue-600 text-white text-sm">+5 meals</button>
+                <button id="donate50" class="px-3 py-1 rounded-md bg-yellow-600 text-black text-sm">+50 meals</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badges -->
+          <div class="p-4 border rounded-lg">
+            <h3 class="font-semibold mb-3">Badges & Levels</h3>
+
+            <div class="grid grid-cols-2 gap-3">
+              <!-- Eco Saver (50) -->
+              <div id="badgeEco" class="flex flex-col items-center p-3 rounded-lg border badge-locked">
+                <div class="text-3xl">🌱</div>
+                <div class="mt-2 text-sm font-medium">Eco Saver</div>
+                <div class="text-xs text-gray-500">50 meals</div>
+              </div>
+
+              <!-- Hunger Hero (500) -->
+              <div id="badgeHero" class="flex flex-col items-center p-3 rounded-lg border badge-locked">
+                <div class="text-3xl">🏆</div>
+                <div class="mt-2 text-sm font-medium">Hunger Hero</div>
+                <div class="text-xs text-gray-500">500 meals</div>
+              </div>
+
+              <!-- Extra sample badges -->
+              <div id="badgeBronze" class="flex flex-col items-center p-3 rounded-lg border badge-locked">
+                <div class="text-3xl">🥉</div>
+                <div class="mt-2 text-sm font-medium">Bronze Donor</div>
+                <div class="text-xs text-gray-500">10 meals</div>
+              </div>
+
+              <div id="badgeSilver" class="flex flex-col items-center p-3 rounded-lg border badge-locked">
+                <div class="text-3xl">🥈</div>
+                <div class="mt-2 text-sm font-medium">Silver Donor</div>
+                <div class="text-xs text-gray-500">100 meals</div>
+              </div>
+            </div>
+
+            <div class="mt-4 text-sm text-gray-600">Badges unlock automatically when the restaurant reaches the required number of meals donated.</div>
+          </div>
+        </div>
+
+        <!-- History / Recent donations -->
+        <div class="mt-6">
+          <h3 class="font-semibold mb-2">Recent activity</h3>
+          <ul id="activityList" class="space-y-2 text-sm text-gray-700">
+            <li class="text-gray-400">No activity yet.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Right: Leaderboard -->
+      <aside class="bg-white p-6 rounded-2xl shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Leaderboard</h2>
+          <div class="text-sm text-gray-500">Top restaurants</div>
+        </div>
+
+        <div class="mt-4">
+          <table class="w-full text-sm">
+            <thead class="text-left text-xs text-gray-500 uppercase">
+              <tr><th class="pb-2">Rank</th><th class="pb-2">Restaurant</th><th class="pb-2">Meals</th></tr>
+            </thead>
+            <tbody id="leaderboardBody" class="align-top">
+              <!-- rows inserted by JS -->
+            </tbody>
+          </table>
+
+          <div class="mt-4 text-xs text-gray-500">Encourage friendly competition — higher-ranked restaurants get recognition and priority features.</div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="mt-8 text-center text-xs text-gray-500">Prototype • Gamification for Donors — demo data only</footer>
+  </div>
+
+  <script>
+    // Sample dataset for the leaderboard and a focused restaurant (the one we're editing)
+    const restaurants = [
+      { id: 1, name: 'Spice & Serve', meals: 32, city: 'Mumbai' },
+      { id: 2, name: 'Green Plate', meals: 78, city: 'Delhi' },
+      { id: 3, name: 'Bread & Care', meals: 210, city: 'Bengaluru' },
+      { id: 4, name: 'City Bites', meals: 12, city: 'Kolkata' },
+      { id: 5, name: 'Meals on Wheels', meals: 502, city: 'Pune' }
+    ];
+
+    // Badge thresholds
+    const BADGES = [
+      { key: 'bronze', label: 'Bronze Donor', threshold: 10, elId: 'badgeBronze' },
+      { key: 'eco', label: 'Eco Saver', threshold: 50, elId: 'badgeEco' },
+      { key: 'silver', label: 'Silver Donor', threshold: 100, elId: 'badgeSilver' },
+      { key: 'hero', label: 'Hunger Hero', threshold: 500, elId: 'badgeHero' }
+    ];
+
+    // the restaurant being viewed / edited in the profile area
+    let currentRest = restaurants[0];
+
+    const mealsCountEl = document.getElementById('mealsCount');
+    const progressBarEl = document.getElementById('progressBar');
+    const achievementLabelEl = document.getElementById('achievementLabel');
+    const activityListEl = document.getElementById('activityList');
+    const leaderboardBody = document.getElementById('leaderboardBody');
+
+    function formatNumber(n){ return n.toLocaleString(); }
+
+    function renderProfile() {
+      mealsCountEl.textContent = formatNumber(currentRest.meals);
+
+      // next badge progress: find next badge threshold > current meals
+      const nextBadge = BADGES.find(b => b.threshold > currentRest.meals) || BADGES[BADGES.length-1];
+      const prevThreshold = [...BADGES].reverse().find(b => b.threshold <= currentRest.meals)?.threshold || 0;
+      const target = nextBadge.threshold || currentRest.meals;
+      const progressPct = Math.min(100, Math.round(((currentRest.meals - prevThreshold) / (target - prevThreshold || 1)) * 100));
+      progressBarEl.style.width = progressPct + '%';
+
+      // determine achievement label based on the highest badge unlocked
+      const unlocked = BADGES.filter(b => currentRest.meals >= b.threshold).map(b => b.label);
+      achievementLabelEl.textContent = unlocked.length ? unlocked.slice(-1)[0] : 'Novice Donor';
+
+      // badges visual update
+      BADGES.forEach(b => {
+        const el = document.getElementById(b.elId);
+        if(!el) return;
+        if(currentRest.meals >= b.threshold){
+          el.classList.remove('badge-locked');
+          el.classList.add('badge-unlocked','pulse');
+          el.setAttribute('title', `Unlocked: ${b.label}`);
+        } else {
+          el.classList.remove('badge-unlocked','pulse');
+          el.classList.add('badge-locked');
+          el.setAttribute('title', `Locked — ${b.threshold} meals needed`);
+        }
+      });
+    }
+
+    function renderLeaderboard(){
+      // sort by meals desc
+      const sorted = [...restaurants].sort((a,b) => b.meals - a.meals);
+      leaderboardBody.innerHTML = '';
+      sorted.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class='py-2 align-top font-semibold'>#${i+1}</td><td class='py-2 align-top'>${r.name} <div class='text-xs text-gray-400'>${r.city}</div></td><td class='py-2 align-top font-mono'>${formatNumber(r.meals)}</td>`;
+        if(r.id === currentRest.id) tr.classList.add('bg-yellow-50');
+        leaderboardBody.appendChild(tr);
+      });
+    }
+
+    function addActivity(text){
+      const li = document.createElement('li');
+      li.className = 'border p-2 rounded-md bg-white';
+      li.textContent = `${new Date().toLocaleString()}: ${text}`;
+      activityListEl.prepend(li);
+      // keep list length manageable
+      while(activityListEl.children.length > 8) activityListEl.removeChild(activityListEl.lastChild);
+    }
+
+    // donation handlers
+    document.getElementById('donate1').addEventListener('click', ()=>applyDonation(1));
+    document.getElementById('donate5').addEventListener('click', ()=>applyDonation(5));
+    document.getElementById('donate50').addEventListener('click', ()=>applyDonation(50));
+
+    function applyDonation(count){
+      currentRest.meals += count;
+      addActivity(`${currentRest.name} donated ${count} meal${count>1?'s':''}`);
+      // keep the restaurants array in sync
+      const idx = restaurants.findIndex(r => r.id === currentRest.id);
+      if(idx >= 0) restaurants[idx].meals = currentRest.meals;
+      renderProfile();
+      renderLeaderboard();
+
+      // notify if big badge earned
+      BADGES.forEach(b => {
+        if(currentRest.meals >= b.threshold && currentRest.meals - count < b.threshold){
+          // newly unlocked
+          addActivity(`${currentRest.name} unlocked badge: ${b.label} (${b.threshold} meals)`);
+        }
+      });
+    }
+
+    // reset demo data
+    document.getElementById('resetBtn').addEventListener('click', ()=>{
+      restaurants[0].meals = 32;
+      restaurants[1].meals = 78;
+      restaurants[2].meals = 210;
+      restaurants[3].meals = 12;
+      restaurants[4].meals = 502;
+      currentRest = restaurants[0];
+      activityListEl.innerHTML = '<li class="text-gray-400">No activity yet.</li>';
+      renderProfile(); renderLeaderboard();
+    });
+
+    // initial render
+    renderProfile(); renderLeaderboard();
+  </script>
+</body>
+</html>

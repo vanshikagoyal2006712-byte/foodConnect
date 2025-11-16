@@ -1,0 +1,124 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Food Connect - Achievements</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+
+  <!-- Header -->
+  <header class="bg-emerald-600 text-white py-4 shadow-md">
+    <div class="max-w-6xl mx-auto flex justify-between items-center px-6">
+      <h1 class="text-2xl font-bold">Food Connect</h1>
+      <a href="index.html" class="bg-white text-emerald-600 px-4 py-2 rounded-lg shadow hover:bg-gray-100">
+        Home
+      </a>
+    </div>
+      <!-- THEME SWITCHER -->
+  <div class="fixed top-4 right-4 z-50">
+    <select id="themeSelector" class="p-2 rounded-lg border shadow">
+      <option value="theme-light"> 🌞 Light</option>
+      <option value="theme-warm"> 🍊 Warm</option>
+      <option value="theme-dark"> 🌙 Dark</option>
+    </select>
+  </div>
+
+  </header>
+
+  <!-- Achievements -->
+  <section class="max-w-6xl mx-auto px-6 py-12 text-center">
+    <h2 class="text-4xl font-extrabold text-emerald-700">Our Achievements</h2>
+    <p class="mt-4 text-gray-600">Your support is changing lives every day.</p>
+
+    <div class="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition">
+        <h3 class="text-3xl font-bold text-orange-500">500+</h3>
+        <p class="text-gray-600 mt-2">Meals Donated</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition">
+        <h3 class="text-3xl font-bold text-emerald-600">10+</h3>
+        <p class="text-gray-600 mt-2">NGOs Supported</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition">
+        <h3 class="text-3xl font-bold text-yellow-500">1000+</h3>
+        <p class="text-gray-600 mt-2">Smiles Created</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="max-w-6xl mx-auto px-6 py-12">
+    <h2 class="text-3xl font-bold text-emerald-700 mb-6 text-center">Gallery of Impact</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <img src="image1.jpg" class="rounded-lg shadow-lg object-cover h-48 w-full" alt="receiving food">
+      <img src="image8.jpg" class="rounded-lg shadow-lg object-cover h-48 w-full" alt="happy children">
+      <img src="image5.webp" class="rounded-lg shadow-lg object-cover h-48 w-full" alt="food distribution">
+      <img src="image4.webp" class="rounded-lg shadow-lg object-cover h-48 w-full" alt="thankful faces">
+      <img src="image6.jpg" class="rounded-lg shadow-lg object-cover h-48 w-full" alt="feeding families">
+      <img src="image7.jpg" class="rounded-lg shadow-lg object-cover h-48 w-full" alt="meal distribution">
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="bg-orange-50 py-12">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <h2 class="text-3xl font-bold text-emerald-700 mb-6">Testimonials</h2>
+      <p class="italic text-gray-700">“Your support brings smiles to thousands.”</p>
+      <p class="italic text-gray-700 mt-2">“Every meal you donate lights up a family’s day.”</p>
+    </div>
+  </section>
+
+  <!-- Partners -->
+  <section class="max-w-6xl mx-auto px-6 py-12">
+    <h2 class="text-3xl font-bold text-emerald-700 mb-6 text-center">Our Partner NGOs in Meerut</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      <div class="bg-white p-4 rounded-lg shadow hover:shadow-xl transition">Amar Samaj Seva Samiti</div>
+      <div class="bg-white p-4 rounded-lg shadow hover:shadow-xl transition">A K Welfare Society</div>
+      <div class="bg-white p-4 rounded-lg shadow hover:shadow-xl transition">Angel Welfare And Research Society</div>
+      <div class="bg-white p-4 rounded-lg shadow hover:shadow-xl transition">We For Education Welfare Society</div>
+      <div class="bg-white p-4 rounded-lg shadow hover:shadow-xl transition">Friends Of Handicapped - India</div>
+      <div class="bg-white p-4 rounded-lg shadow hover:shadow-xl transition">Bright Stars Foundation</div>
+      <div class="bg-white p-4 rounded-lg shadow hover:shadow-xl transition">Ek Pehel Anant Tak Foundation</div>
+      <div class="bg-white p-4 rounded-lg shadow hover:shadow-xl transition">Bhagyoday Jan Kalyan Samiti</div>
+    </div>
+  </section>
+  <script>
+        // Theme switcher logic
+    const themeSelector = document.getElementById("themeSelector");
+    themeSelector.addEventListener("change", (e) => {
+      document.body.className = e.target.value + " min-h-screen transition-colors duration-500";
+    });
+  </script>
+
+  </script>
+    <style>
+    /* THEME STYLES */
+    .theme-light {
+      --bg: #f9fafb;
+      --text: #1f2937;
+    }
+    .theme-warm {
+      --bg: #fff7ed;
+      --text: #7c2d12;
+    }
+    .theme-dark {
+      --bg: #1f2937;
+      --text: #f9fafb;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+    }
+  </style>
+
+
+  <!-- Footer -->
+  <footer class="bg-emerald-600 text-white text-center py-4">
+    <p>© 2025 Food Connect. All rights reserved.</p>
+  </footer>
+
+
+</body>
+</html>

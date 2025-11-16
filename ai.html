@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FoodConnect — AI Chatbot Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: linear-gradient(180deg,#f8fafc 0%, #ffffff 60%); }
+    .msg { word-wrap: break-word; }
+    .typing-dots > span { animation: blink 1.2s infinite; }
+    .typing-dots > span:nth-child(2) { animation-delay: .2s }
+    .typing-dots > span:nth-child(3) { animation-delay: .4s }
+    @keyframes blink { 0% { opacity: .2 } 20% { opacity: 1 } 100% { opacity: .2 } }
+  </style>
+</head>
+<body class="min-h-screen font-sans text-slate-800">
+  <header class="bg-emerald-600 text-white py-4 shadow-md">
+    <div class="max-w-5xl mx-auto px-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="text-2xl">🤖</div>
+        <div>
+          <h1 class="text-lg font-semibold">FoodConnect Assistant</h1>
+          <div class="text-xs opacity-90">Ask about donations, packaging, scheduling, or impact.</div>
+        </div>
+      </div>
+      <div class="text-sm opacity-90">AI-powered helper • Demo frontend</div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left: Tips & Quick Prompts -->
+    <aside class="lg:col-span-1 bg-white rounded-2xl p-5 shadow-sm border">
+      <h3 class="font-medium text-emerald-700">Quick prompts</h3>
+      <div class="mt-3 space-y-2">
+        <button class="quick px-3 py-2 w-full text-left rounded-lg bg-emerald-50 hover:bg-emerald-100">How should I pack cooked meals?</button>
+        <button class="quick px-3 py-2 w-full text-left rounded-lg bg-emerald-50 hover:bg-emerald-100">Nearby NGOs accepting cooked food</button>
+        <button class="quick px-3 py-2 w-full text-left rounded-lg bg-emerald-50 hover:bg-emerald-100">What is the foodprint calculator?</button>
+      </div>
+
+      <hr class="my-4" />
+      <h4 class="text-sm font-medium">Voice & Accessibility</h4>
+      <p class="text-xs text-slate-500 mt-2">You can use mic input (if supported) and enable speech output for the assistant.</p>
+      <div class="mt-3 flex gap-2">
+        <button id="micBtn" class="px-3 py-2 rounded-lg bg-slate-100">🎤 Mic</button>
+        <button id="ttsBtn" class="px-3 py-2 rounded-lg bg-slate-100">🔊 TTS</button>
+      </div>
+
+      <hr class="my-4" />
+      <div class="text-xs text-slate-500">This is a frontend demo. To make the assistant live, connect <code>/api/chat</code> to your chosen LLM backend (OpenAI, Vertex AI, etc.).</div>
+    </aside>
+
+    <!-- Chat area -->
+    <section class="lg:col-span-2 bg-white rounded-3xl p-5 shadow-lg border">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Assistant</h2>
+        <div class="text-sm text-slate-500">Conversation with AI</div>
+      </div>
+
+      <div id="chat" class="space-y-4 max-h-[60vh] overflow-y-auto p-3 border rounded-2xl bg-gradient-to-b from-white to-emerald-50">
+        <!-- messages go here -->
+      </div>
+
+      <form id="chatForm" class="mt-4 flex gap-3 items-center">
+        <input id="prompt" class="flex-1 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-emerald-400" placeholder="Ask something like: 'How to schedule recurring donations?'" />
+        <button type="submit" class="px-5 py-3 bg-emerald-600 text-white rounded-xl">Send</button>
+      </form>
+
+      <div class="mt-3 text-xs text-slate-500">Tip: Use the quick prompts on the left to start faster.</div>
+    </section>
+  </main>
+
+  <script>
+    // Simple chat UI front-end that expects a backend endpoint POST /api/chat
+    // Backend contract (recommended): POST /api/chat { message: string, history: [{role,content}] } -> { reply: string }
+
+    const chatEl = document.getElementById('chat');
+    const form = document.getElementById('chatForm');
+    const promptInput = document.getElementById('prompt');
+    const quickBtns = document.querySelectorAll('.quick');
+    const micBtn = document.getElementById('micBtn');
+    const ttsBtn = document.getElementById('ttsBtn');
+
+    // Conversation stored in localStorage for demo
+    const LS = 'fc_ai_conv_v1';
+    let conversation = JSON.parse(localStorage.getItem(LS) || '[]');
+    let useTTS = false;
+
+    function save() { localStorage.setItem(LS, JSON.stringify(conversation)); }
+
+    function createMsgNode(role, text, meta=''){
+      const wrap = document.createElement('div');
+      wrap.className = role === 'user' ? 'flex justify-end' : 'flex justify-start';
+      const box = document.createElement('div');
+      box.className = 'max-w-[78%] px-4 py-3 rounded-2xl shadow-sm ' + (role==='user' ? 'bg-emerald-600 text-white' : 'bg-white');
+      box.innerHTML = `<div class=\"msg\">${escapeHtml(text)}</div> <div class=\"text-[10px] opacity-60 mt-2\">${meta}</div>`;
+      wrap.appendChild(box);
+      return wrap;
+    }
+
+    function escapeHtml(str){ return str.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+    function render(){
+      chatEl.innerHTML = '';
+      conversation.forEach(item => {
+        chatEl.appendChild(createMsgNode(item.role, item.content, item.meta || ''));
+      });
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    async function sendToBackend(message){
+      // Example POST: adapt this to your backend (OpenAI proxy / serverless function)
+      try{
+        const resp = await fetch('/api/chat', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, history: conversation })
+        });
+        if (!resp.ok) throw new Error('Bad response from server');
+        const data = await resp.json();
+        return data.reply || 'Sorry — no reply.';
+      } catch (err) {
+        console.error(err);
+        return "(Demo) Unable to reach backend — make sure /api/chat is implemented.";
+      }
+    }
+
+    async function submitMessage(text){
+      if (!text.trim()) return;
+      // push user message
+      const userMsg = { role: 'user', content: text, meta: new Date().toLocaleTimeString() };
+      conversation.push(userMsg); save(); render();
+
+      // show assistant placeholder (typing)
+      const typingId = 'typing_'+Date.now();
+      const typingNodeWrap = document.createElement('div');
+      typingNodeWrap.className = 'flex justify-start';
+      const typingNode = document.createElement('div');
+      typingNode.className = 'px-4 py-3 rounded-2xl shadow-sm bg-white';
+      typingNode.innerHTML = `<div class=\"typing-dots text-slate-600\"><span>•</span><span>•</span><span>•</span></div>`;
+      typingNodeWrap.appendChild(typingNode);
+      chatEl.appendChild(typingNodeWrap);
+      chatEl.scrollTop = chatEl.scrollHeight;
+
+      // send to backend
+      const reply = await sendToBackend(text);
+      // remove typing
+      typingNodeWrap.remove();
+
+      const botMsg = { role: 'assistant', content: reply, meta: new Date().toLocaleTimeString() };
+      conversation.push(botMsg); save(); render();
+
+      if (useTTS && 'speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(reply);
+        speechSynthesis.speak(u);
+      }
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      submitMessage(promptInput.value);
+      promptInput.value = '';
+    });
+
+    quickBtns.forEach(b => b.addEventListener('click', () => {
+      submitMessage(b.textContent.trim());
+    }));
+
+    // Mic input (Web Speech API)
+    let recognition = null;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SR();
+      recognition.lang = 'en-IN';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onresult = (e) => {
+        const text = e.results[0][0].transcript;
+        submitMessage(text);
+      };
+      recognition.onerror = (e) => { console.error('Speech recognition error', e); };
+    } else {
+      micBtn.classList.add('opacity-50');
+      micBtn.title = 'Speech recognition not supported in this browser';
+    }
+
+    micBtn.addEventListener('click', () => {
+      if (!recognition) return alert('Speech recognition not supported on this browser');
+      recognition.start();
+    });
+
+    // TTS toggle
+    ttsBtn.addEventListener('click', () => {
+      useTTS = !useTTS; ttsBtn.textContent = useTTS ? '🔊 TTS ON' : '🔇 TTS OFF';
+    });
+
+    // initial render
+    render();
+
+    // Helpful: Pre-populate demo assistant greeting if empty
+    if (!conversation.length){
+      conversation.push({ role: 'assistant', content: "Hi! I'm FoodConnect Assistant — I can help with donation steps, packaging tips, scheduling, and impact metrics. Try asking 'How to pack cooked meals for donation?'", meta: '' });
+      save(); render();
+    }
+  </script>
+</body>
+</html>

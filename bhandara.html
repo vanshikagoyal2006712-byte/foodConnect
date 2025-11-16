@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Anonymous Participation — FoodConnect</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: linear-gradient(to right, #f0fdf4, #f9fafb); }
+    header { background: linear-gradient(90deg, #10b981, #059669); }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 font-sans">
+  <!-- Header -->
+  <header class="shadow-lg sticky top-0 z-20">
+    <div class="max-w-4xl mx-auto px-4 py-5 flex items-center justify-between text-white">
+      <h1 class="text-2xl font-bold tracking-wide">🤝 Anonymous Participation</h1>
+      <span class="text-sm italic opacity-90">Anyone can contribute • Zero Waste • Big Impact</span>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-3xl mx-auto p-6">
+    <section class="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-lg border border-emerald-100">
+      <h2 class="text-2xl font-bold text-emerald-700 mb-4">🍲 Share Food Anonymously</h2>
+      <p class="text-sm text-slate-600 mb-6">Even if you're not a restaurant or NGO, you can still contribute food from ceremonies, bhandaras, or personal events.</p>
+
+      <!-- Form -->
+      <form id="anonForm" class="space-y-5">
+        <!-- Name -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Name</label>
+          <input required name="name" type="text" class="w-full mt-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Your full name" />
+        </div>
+
+        <!-- Phone -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Phone Number</label>
+          <input required name="phone" type="tel" pattern="[0-9]{10}" class="w-full mt-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="10-digit number" />
+        </div>
+
+        <!-- Donor Address -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Donor Address</label>
+          <textarea required name="address" rows="3" class="w-full mt-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Enter your address"></textarea>
+        </div>
+
+        <!-- Food Dishes -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Food Dishes</label>
+          <div id="dishes" class="space-y-3 mt-2"></div>
+          <button type="button" onclick="addDish()" class="mt-3 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl border border-emerald-300 hover:bg-emerald-200">➕ Add Another Dish</button>
+        </div>
+
+        <!-- Food Quantity (auto-filled if pickup is required) -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Total Food Quantity</label>
+          <input required id="quantity" name="quantity" type="text" class="w-full mt-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Auto-calculated if pickup required" />
+        </div>
+
+        <!-- Food Quality -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Food Quality</label>
+          <select required name="quality" class="w-full mt-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <option value="">Select quality</option>
+            <option>Fresh (Same day prepared)</option>
+            <option>Cooked but Stored Properly</option>
+            <option>Packaged & Sealed</option>
+          </select>
+        </div>
+
+        <!-- Pickup Medium -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Pickup Medium</label>
+          <select required id="pickup" name="pickup" class="w-full mt-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none" onchange="handlePickupChange()">
+            <option value="">Choose option</option>
+            <option value="self">I will deliver myself</option>
+            <option value="pickup">I need pickup assistance</option>
+          </select>
+        </div>
+
+        <!-- Pickup Vehicle Suggestion -->
+        <div id="vehicleSuggestion" class="hidden text-sm text-slate-600 bg-emerald-50 border border-emerald-200 rounded-xl p-3"></div>
+
+        <!-- Submit -->
+        <div class="flex justify-end">
+          <button type="submit" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 transition text-white rounded-xl shadow-lg">
+            ✅ Submit Donation
+          </button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <!-- Script -->
+  <script>
+    const dishesDiv = document.getElementById("dishes");
+    const quantityInput = document.getElementById("quantity");
+    const pickupSelect = document.getElementById("pickup");
+    const vehicleDiv = document.getElementById("vehicleSuggestion");
+
+    let dishCount = 0;
+
+    // Add a new dish row
+    function addDish() {
+      dishCount++;
+      const dishRow = document.createElement("div");
+      dishRow.className = "flex items-center space-x-2";
+      dishRow.innerHTML = `
+        <input type="text" name="dishName${dishCount}" placeholder="Dish name" class="flex-grow px-3 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500" required />
+        <input type="number" min="1" name="dishQty${dishCount}" placeholder="Qty" class="w-24 px-3 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500" required />
+        <select name="dishUnit${dishCount}" class="px-2 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500">
+          <option value="kg">kg</option>
+          <option value="g">g</option>
+        </select>
+      `;
+      dishesDiv.appendChild(dishRow);
+    }
+
+    // Initialize with 1 dish row
+    addDish();
+
+    // Handle pickup medium change
+    function handlePickupChange() {
+      if (pickupSelect.value === "pickup") {
+        autoCalculateQuantity();
+      } else {
+        vehicleDiv.classList.add("hidden");
+      }
+    }
+
+    // Auto calculate total food quantity and show vehicle suggestion
+    function autoCalculateQuantity() {
+      let totalKg = 0;
+      const qtyInputs = dishesDiv.querySelectorAll("input[type=number]");
+      const unitSelects = dishesDiv.querySelectorAll("select");
+
+      qtyInputs.forEach((qty, index) => {
+        let val = parseFloat(qty.value) || 0;
+        let unit = unitSelects[index].value;
+        if (unit === "g") {
+          val = val / 1000; // convert grams to kg
+        }
+        totalKg += val;
+      });
+
+      if (totalKg > 0) {
+        quantityInput.value = totalKg.toFixed(2) + " kg";
+        showVehicleSuggestion(totalKg);
+      }
+    }
+
+    // Suggest vehicle based on weight
+    function showVehicleSuggestion(totalKg) {
+      let suggestion = "";
+      if (totalKg <= 20) {
+        suggestion = "🚲 2-Wheeler is sufficient for this pickup.";
+      } else if (totalKg <= 50) {
+        suggestion = "🚗 E-Rickshaw, Auto, or Car is recommended.";
+      } else {
+        suggestion = "🚚 For huge quantities, a Mini Truck is required.";
+      }
+      vehicleDiv.innerText = suggestion;
+      vehicleDiv.classList.remove("hidden");
+    }
+
+    // Update auto calculation when quantities change
+    dishesDiv.addEventListener("input", () => {
+      if (pickupSelect.value === "pickup") {
+        autoCalculateQuantity();
+      }
+    });
+
+    // Handle form submit
+    document.getElementById("anonForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      alert("🙏 Thank you for your contribution! Our team will connect with you soon.");
+      e.target.reset();
+      dishesDiv.innerHTML = "";
+      addDish();
+      vehicleDiv.classList.add("hidden");
+    });
+  </script>
+</body>
+</html>

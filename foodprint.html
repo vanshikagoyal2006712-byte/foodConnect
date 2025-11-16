@@ -1,0 +1,125 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foodprint Calculator - Food Connect</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <!-- Navbar -->
+  <header class="bg-green-800 text-white p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Food Connect</h1>
+    <nav class="flex gap-4">
+      <a href="index.html" class="hover:underline">Home</a>
+      <a href="dashboard.html" class="hover:underline">Dashboard</a>
+      <a href="foodprint.html" class="font-semibold text-yellow-400">Foodprint</a>
+    </nav>
+  </header>
+
+  <!-- Foodprint Calculator -->
+  <main class="max-w-4xl mx-auto px-6 py-14">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <h2 class="text-3xl font-bold text-green-800 mb-4">🌍 Foodprint Calculator</h2>
+      <p class="text-gray-600 mb-6">See the impact of your donation in meals, water, and carbon savings.</p>
+
+      <!-- Calculator Form -->
+      <form id="foodprintForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Food Type</label>
+          <select id="foodType" class="w-full mt-1 p-2 border rounded-lg">
+            <option value="rice">Rice</option>
+            <option value="bread">Bread</option>
+            <option value="vegetables">Vegetables</option>
+            <option value="curry">Curry</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Quantity (kg)</label>
+          <input type="number" id="foodQty" class="w-full mt-1 p-2 border rounded-lg" placeholder="Enter in kg" min="1" required>
+        </div>
+        <div class="md:col-span-2">
+          <button type="submit" class="px-5 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600">Calculate Impact</button>
+        </div>
+      </form>
+
+<!-- Results -->
+<div id="results" class="mt-8 hidden">
+  <h3 class="text-xl font-bold text-green-700 mb-3">Your Impact 🌱</h3>
+
+  <!-- Progress Bar -->
+  <div class="mb-4">
+    <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
+      <div id="impactBar" class="bg-green-600 h-5 rounded-full transition-all duration-700 ease-in-out" style="width: 0%;"></div>
+    </div>
+    <p id="impactLevel" class="text-sm text-gray-600 mt-2 text-center font-medium"></p>
+  </div>
+
+  <ul class="space-y-2">
+    <li id="mealsResult" class="p-3 bg-green-50 border-l-4 border-green-600 rounded"></li>
+    <li id="waterResult" class="p-3 bg-blue-50 border-l-4 border-blue-600 rounded"></li>
+    <li id="carbonResult" class="p-3 bg-gray-100 border-l-4 border-gray-700 rounded"></li>
+  </ul>
+</div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-green-800 text-white text-center py-4">
+    © <span id="year"></span> Food Connect
+  </footer>
+
+  <!-- JS -->
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Impact multipliers
+    const foodImpact = {
+      rice:   { mealFactor: 5, waterPerKg: 100, carbonPerKg: 2 },
+      bread:  { mealFactor: 4, waterPerKg: 160, carbonPerKg: 1.5 },
+      vegetables: { mealFactor: 3, waterPerKg: 50, carbonPerKg: 1 },
+      curry:  { mealFactor: 6, waterPerKg: 120, carbonPerKg: 2.2 }
+    };
+
+document.getElementById("foodprintForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const type = document.getElementById("foodType").value;
+  const qty = parseFloat(document.getElementById("foodQty").value);
+
+  if (!qty || qty <= 0) return;
+
+  const impact = foodImpact[type];
+  const meals = qty * impact.mealFactor;
+  const water = qty * impact.waterPerKg;
+  const carbon = qty * impact.carbonPerKg;
+
+  // Show results
+  document.getElementById("results").classList.remove("hidden");
+  document.getElementById("mealsResult").textContent = `🍽️ Your donation provides approximately ${meals} meals.`;
+  document.getElementById("waterResult").textContent = `💧 You saved about ${water.toLocaleString()} liters of water.`;
+  document.getElementById("carbonResult").textContent = `🌿 You reduced around ${carbon.toFixed(1)} kg of CO₂ emissions.`;
+
+  // Progress Bar Logic
+  const progressBar = document.getElementById("impactBar");
+  const impactLevelText = document.getElementById("impactLevel");
+
+  // Assume max impact at 100 meals for full bar
+  const percentage = Math.min((meals / 100) * 100, 100);
+  progressBar.style.width = `${percentage}%`;
+
+  // Change color & label dynamically
+  if (percentage < 30) {
+    progressBar.className = "bg-red-500 h-5 rounded-full transition-all duration-700 ease-in-out";
+    impactLevelText.textContent = "Impact Level: Basic 🌾";
+  } else if (percentage < 70) {
+    progressBar.className = "bg-yellow-500 h-5 rounded-full transition-all duration-700 ease-in-out";
+    impactLevelText.textContent = "Impact Level: Moderate 🌱";
+  } else {
+    progressBar.className = "bg-green-600 h-5 rounded-full transition-all duration-700 ease-in-out";
+    impactLevelText.textContent = "Impact Level: Significant 🌳";
+  }
+});
+</script>
+
+</body>
+</html>

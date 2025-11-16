@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Community & Storytelling Wall — FoodConnect</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .card-image { height: 200px; object-fit: cover; }
+    body { background: linear-gradient(to right, #f0fdf4, #f9fafb); }
+    header { background: linear-gradient(90deg, #10b981, #059669); }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 font-sans">
+  <header class="shadow-lg sticky top-0 z-20">
+    <div class="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between text-white">
+      <h1 class="text-2xl font-bold tracking-wide">🌍 Community & Storytelling Wall</h1>
+      <span class="text-sm italic opacity-90">Share stories • Celebrate impact • Build trust</span>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left: Submit / Filters -->
+    <section class="lg:col-span-1 bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-lg border border-emerald-100">
+      <h2 class="text-xl font-semibold text-emerald-700">✍️ Share a story</h2>
+      <p class="text-sm text-slate-500 mb-5">Donors, receivers, volunteers — inspire others by adding a short story or photo about your experience.</p>
+
+      <form id="storyForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-600">Name</label>
+          <input required name="author" class="w-full mt-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Your name / organization" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-600">Role</label>
+          <select name="role" class="w-full mt-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500">
+            <option>Donor</option>
+            <option>Receiver (NGO / Old Age Home)</option>
+            <option>Volunteer</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-600">Story</label>
+          <textarea required name="content" rows="4" class="w-full mt-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-emerald-500" placeholder="Describe how the donation helped, emotions, numbers..."></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-600">Photo (optional)</label>
+          <input id="imageInput" type="file" accept="image/*" class="mt-1" />
+          <img id="previewImg" class="mt-3 rounded-xl w-full object-cover hidden border" alt="preview" />
+        </div>
+
+        <div class="flex items-center justify-between mt-4">
+          <div class="text-xs text-slate-500">(Demo only — stories are stored locally)</div>
+          <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 transition text-white rounded-xl shadow">🚀 Submit</button>
+        </div>
+      </form>
+
+      <hr class="my-6" />
+      <div>
+        <h3 class="text-md font-semibold text-emerald-700">🔎 Filters</h3>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button class="filterBtn px-4 py-1.5 rounded-full bg-emerald-100 hover:bg-emerald-200 text-sm font-medium" data-role="all">All</button>
+          <button class="filterBtn px-4 py-1.5 rounded-full bg-emerald-100 hover:bg-emerald-200 text-sm font-medium" data-role="Donor">Donors</button>
+          <button class="filterBtn px-4 py-1.5 rounded-full bg-emerald-100 hover:bg-emerald-200 text-sm font-medium" data-role="Receiver (NGO / Old Age Home)">Receivers</button>
+          <button class="filterBtn px-4 py-1.5 rounded-full bg-emerald-100 hover:bg-emerald-200 text-sm font-medium" data-role="Volunteer">Volunteers</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Middle: Stories feed -->
+    <section class="lg:col-span-2 space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-bold text-emerald-700">📖 Stories Feed</h2>
+        <div class="text-sm text-slate-600">Total stories: <span id="count">0</span></div>
+      </div>
+
+      <div id="feed" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Story cards will appear here -->
+      </div>
+    </section>
+  </main>
+
+  <template id="cardTpl">
+    <article class="bg-white/95 backdrop-blur-md rounded-3xl shadow-lg overflow-hidden flex flex-col border border-slate-100 hover:scale-[1.01] transition-transform">
+      <img class="card-image w-full" src="image6.jpg" alt="story image" />
+      <div class="p-5 flex-1 flex flex-col">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="font-semibold text-emerald-700" data-role="author">Author</div>
+            <div class="text-xs text-slate-500" data-role="meta">Role • Date</div>
+          </div>
+          <div class="text-xs px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full" data-role="badge">badge</div>
+        </div>
+        <p class="mt-3 text-sm text-slate-700 leading-relaxed" data-role="content">Story content</p>
+
+        <div class="mt-4 flex items-center justify-between">
+          <div class="flex gap-2">
+            <button class="likeBtn px-3 py-1 text-sm rounded-full border bg-slate-50 hover:bg-slate-100">👍 <span class="likeCount">0</span></button>
+            <button class="commentToggle px-3 py-1 text-sm rounded-full border bg-slate-50 hover:bg-slate-100">💬 <span class="commentCount">0</span></button>
+            <button class="shareBtn px-3 py-1 text-sm rounded-full border bg-slate-50 hover:bg-slate-100">🔗 Share</button>
+          </div>
+        </div>
+
+        <div class="mt-4 hidden commentsArea">
+          <div class="space-y-2" data-role="comments"></div>
+          <form class="mt-3 commentForm flex gap-2">
+            <input required placeholder="Write a comment..." class="flex-1 px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-500" />
+            <button class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm">Send</button>
+          </form>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script>
+    // Demo with localStorage
+    const LS_KEY = 'fc_stories_v1';
+    const feed = document.querySelector('#feed');
+    const count = document.querySelector('#count');
+
+    let STORIES = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+
+    function save() { localStorage.setItem(LS_KEY, JSON.stringify(STORIES)); }
+    function render() {
+      feed.innerHTML = '';
+      count.textContent = STORIES.length;
+      STORIES.slice().reverse().forEach(s => feed.appendChild(renderCard(s)));
+    }
+
+    function renderCard(story) {
+      const tpl = document.querySelector('#cardTpl');
+      const node = tpl.content.cloneNode(true);
+      const img = node.querySelector('img');
+      node.querySelector('[data-role="author"]').textContent = story.author;
+      node.querySelector('[data-role="meta"]').textContent = `${story.role} • ${new Date(story.createdAt).toLocaleString()}`;
+      node.querySelector('[data-role="content"]').textContent = story.content;
+      node.querySelector('[data-role="badge"]').textContent = story.role;
+      img.src = story.image || 'image6.jpg';
+      node.querySelector('.likeCount').textContent = story.likes || 0;
+      node.querySelector('.commentCount').textContent = (story.comments || []).length;
+
+      node.querySelector('.likeBtn').addEventListener('click', () => {
+        story.likes = (story.likes || 0) + 1;
+        save();
+        render();
+      });
+
+      node.querySelector('.commentForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const text = e.target.querySelector('input').value;
+        if (!text.trim()) return;
+        story.comments.push({ author: 'Guest', text });
+        save();
+        render();
+      });
+
+      node.querySelector('.commentToggle').addEventListener('click', () => {
+        node.querySelector('.commentsArea').classList.toggle('hidden');
+      });
+
+      node.querySelector('.shareBtn').addEventListener('click', async () => {
+        if (navigator.share) {
+          await navigator.share({ title: 'FoodConnect Story', text: story.content });
+        } else {
+          await navigator.clipboard.writeText(`${story.author}: ${story.content}`);
+          alert('Copied to clipboard!');
+        }
+      });
+
+      return node;
+    }
+
+    document.querySelector('#storyForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const story = {
+        author: fd.get('author'),
+        role: fd.get('role'),
+        content: fd.get('content'),
+        image: window.pendingImage || null,
+        createdAt: Date.now(),
+        likes: 0,
+        comments: []
+      };
+      STORIES.push(story);
+      save();
+      e.target.reset();
+      document.querySelector('#previewImg').classList.add('hidden');
+      window.pendingImage = null;
+      render();
+    });
+
+    document.querySelector('#imageInput').addEventListener('change', async e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const data = await fileToBase64(f);
+      document.querySelector('#previewImg').src = data;
+      document.querySelector('#previewImg').classList.remove('hidden');
+      window.pendingImage = data;
+    });
+
+    function fileToBase64(file) {
+      return new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+    }
+
+    if (!STORIES.length) {
+      STORIES = [
+        { author: 'Cafe Solace', role: 'Donor', content: 'We donated leftover meals after an event — grateful to see them reach a nearby old age home.', createdAt: Date.now()-86400000, likes: 3, comments: [] },
+        { author: 'Anjali (Volunteer)', role: 'Volunteer', content: 'Picked up 10 parcels from a wedding; the joy on the receiver faces was priceless.', createdAt: Date.now()-3600000, likes: 5, comments: [] }
+      ];
+      save();
+    }
+
+    render();
+  </script>
+</body>
+</html>

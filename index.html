@@ -1,0 +1,565 @@
+ <!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Food Connect — Donate surplus food to NGOs</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Leaflet for maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+qz6b3gZQv2pX1rH1r+v1pQ0q6K2G1g0u6k8rra3M=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-XQoYMqMTK8LpLeA2jtK8f3bqQ2j1wq3Qm0A2v2w5e3s=" crossorigin=""></script>
+
+  <style>
+    /* small customizations */
+    :root {
+      --brand-1: #065f46; /* emerald-800
+      --accent: #f59e0b;  /* amber-500 */
+    }
+    html,body { height:100%; }
+    .page-section { scroll-margin-top: 96px; }
+    .hero-img { background-image: url('https://images.unsplash.com/photo-1529688530649-72b1d30e4a2e?auto=format&fit=crop&w=1500&q=80'); background-size:cover; background-position:center; }
+    /* simple carousel */
+    .carousel-track { display:flex; gap:12px; overflow:hidden; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; }
+    .carousel-item { flex:0 0 100%; scroll-snap-align:center; }
+    /* small shadow for cards */
+    .card { box-shadow: 0 8px 24px rgba(6,95,70,0.06); border-radius: 12px; background: white; }
+    /* responsive map height */
+    #map { height: 380px; border-radius: 12px; }
+    /* subtle hover */
+    .hover-lift:hover { transform: translateY(-6px); transition: transform .22s; }
+  </style>
+</head>
+  <!-- NAVBAR -->
+  <header class="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-b">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        <a href="#home" class="flex items-center gap-3">
+          <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" alt="logo" class="w-12 h-12 rounded-md shadow-sm" />
+          <div>
+            <div class="text-lg font-bold text-[var(--brand-1)]">Food Connect</div>
+            <div class="text-xs text-gray-500">Real-time donations • Restaurants → NGOs</div>
+          </div>
+        </a>
+
+        <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
+          <a href="#about" class="hover:underline">About</a>
+          <a href="#how" class="hover:underline">How it works</a>
+          <a href="#donate" class="hover:underline">Donate</a>
+          <a href="#register" class="hover:underline">NGO Sign-up</a>
+          <a href="#feed" class="hover:underline">Live Feed</a>
+          <a href="foodprint.html" class="hover:underline">Foodprint</a>
+          <a href="dashboard.html">Go to Dashboard</a>
+         <a href="#contact" class="hover:underline">Contact</a>
+
+
+        </nav>
+
+      </div>
+    </div>
+  </header>
+
+  <main class="pt-24">
+
+    <!-- HERO -->
+    <section id="home" class="hero-img page-section relative h-screen flex items-center">
+      <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-transparent"></div>
+      <div class="max-w-6xl mx-auto w-full px-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div class="text-white relative z-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold leading-tight drop-shadow-lg">Together, we've fed <span class="text-yellow-400">500+</span> poor people and supported multiple NGOs</h1>
+            <p class="mt-4 text-lg text-gray-100/90 max-w-xl">Food Connect links restaurants and cafés with verified NGOs in real time — reducing food waste and feeding families with dignity.</p>
+            <div class="mt-6 flex gap-3 flex-wrap">
+              <a href="#donate" class="px-5 py-3 rounded-lg bg-[var(--brand-1)] text-white font-semibold shadow hover:opacity-95">Donate Now</a>
+              <a href="#register" class="px-5 py-3 rounded-lg bg-[var(--accent)] text-white font-semibold shadow hover:opacity-95">Join as NGO</a>
+              <a href="#contact" class="px-5 py-3 rounded-lg border border-white/30 text-white">Sign Up</a>
+            </div>
+
+            <!-- quick stats -->
+            <div class="mt-8 grid grid-cols-3 gap-4 max-w-md">
+              <div class="bg-white/10 p-4 rounded-lg">
+                <div class="text-2xl font-bold text-yellow-400" id="stat-meals">500+</div>
+                <div class="text-xs text-gray-100">Meals served</div>
+              </div>
+              <div class="bg-white/10 p-4 rounded-lg">
+                <div class="text-2xl font-bold text-yellow-400" id="stat-ngos">10+</div>
+                <div class="text-xs text-gray-100">NGOs supported</div>
+              </div>
+              <div class="bg-white/10 p-4 rounded-lg">
+                <div class="text-2xl font-bold text-yellow-400" id="stat-cities">5</div>
+                <div class="text-xs text-gray-100">Cities covered</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- hero right card with carousel of donation scenes -->
+          <div class="relative z-10">
+            <div class="card p-4 hover-lift overflow-hidden">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <div class="text-sm text-gray-500">Live Donation Highlights</div>
+                  <div class="font-semibold">Recent donation photos</div>
+                </div>
+                <div class="text-xs text-gray-400">Updated</div>
+              </div>
+
+              <!-- simple carousel (manual) -->
+              <div class="carousel-track" id="heroCarousel" style="height:260px;">
+                <div class="carousel-item rounded-lg overflow-hidden">
+                  <img src="photo2.jpg" alt="" class="w-full h-[260px] object-cover" />
+                </div>
+                <div class="carousel-item rounded-lg overflow-hidden">
+                  <img src="food1.png" alt="" class="w-full h-[260px] object-cover" />
+                </div>
+                <div class="carousel-item rounded-lg overflow-hidden">
+                  <img src="image7.jpg" alt="" class="w-full h-[260px] object-cover" />
+                </div>
+              </div>
+
+              <div class="mt-4 flex gap-3 justify-end">
+                <button id="carouselPrev" class="px-3 py-2 rounded border text-sm">Prev</button>
+                <button id="carouselNext" class="px-3 py-2 rounded border text-sm">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="page-section max-w-6xl mx-auto px-6 py-16">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+        <div class="col-span-2 space-y-4">
+          <h2 class="text-3xl font-bold text-[var(--brand-1)]">About Food Connect</h2>
+          <p class="text-gray-700">Food Connect is a real-time platform that helps restaurants and cafés donate surplus food to verified NGOs. We coordinate pickups, map donors and NGOs, and maintain a transparent live feed with photos and timestamps so every donation is traceable and dignified.<br>
+            <br>
+            According to the UNICEF report, 8.8 lakh children under five years of age lost their life due to starvation in 2018. Over 20 crore Indians sleep empty-stomach every day. More than 7000 Indians die per day due to hunger. As per the reports concluded from the recent data, 25 lakh Indians die every year because of hunger.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div class="card p-5">
+              <h3 class="font-semibold">Our Mission</h3>
+              <p class="mt-2 text-sm text-gray-600">Reduce food waste and ensure surplus meals reach vulnerable people through trusted NGO partners.</p>
+            </div>
+            <div class="card p-5">
+              <h3 class="font-semibold">Our Vision</h3>
+              <p class="mt-2 text-sm text-gray-600">A connected community where no edible food is wasted and no person goes hungry.</p>
+            </div>
+          </div>
+
+          <!-- impact infographics-->
+          <div class="mt-6 grid grid-cols-3 gap-4 text-center">
+            <div class="p-4 rounded-lg bg-white">
+              <div class="text-3xl font-bold text-[var(--accent)]" id="inf1">500+</div>
+              <div class="text-sm text-gray-600">People fed</div>
+            </div>
+            <div class="p-4 rounded-lg bg-white">
+              <div class="text-3xl font-bold text-[var(--accent)]" id="inf2">10+</div>
+              <div class="text-sm text-gray-600">NGOs supported</div>
+            </div>
+            <div class="p-4 rounded-lg bg-white">
+              <div class="text-3xl font-bold text-[var(--accent)]" id="inf3">1200+</div>
+              <div class="text-sm text-gray-600">Meals saved</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- right column: short story + CTA -->
+        <aside class="space-y-4">
+          <div class="card p-6">
+            <h4 class="font-semibold">Our Story</h4>
+            <p class="text-sm text-gray-600 mt-2">Started by volunteers and restaurant partners, Food Connect grew from small neighborhood drives into a live platform connecting multiple cities and NGOs.</p>
+            <div class="mt-4">
+              <a href="#register" class="inline-block px-4 py-2 bg-[var(--brand-1)] text-white rounded-lg">Partner with us</a>
+            </div>
+          </div>
+
+          <div class="card p-4">
+            <h4 class="font-semibold">Verified NGOs</h4>
+            <p class="text-xs text-gray-600 mt-1">We verify partners and accept photo/ID documentation during NGO registration for safety and transparency.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how" class="page-section bg-[linear-gradient(90deg,#ecfccb,white)] py-12">
+      <div class="max-w-6xl mx-auto px-6">
+        <h2 class="text-3xl font-bold text-[var(--brand-1)]">How It Works</h2>
+        <p class="text-gray-700 mt-2 max-w-2xl">Simple steps to get food where it's needed most.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div class="card p-6 text-center hover-lift">
+            <img src="https://cdn-icons-png.flaticon.com/512/2907/2907761.png" class="w-16 h-16 mx-auto" />
+            <h4 class="mt-4 font-semibold">1. Post Donation</h4>
+            <p class="text-sm text-gray-600 mt-2">Restaurants post food details and pickup address via a simple form.</p>
+          </div>
+
+          <div class="card p-6 text-center hover-lift">
+            <img src="https://cdn-icons-png.flaticon.com/512/1250/1250677.png" class="w-16 h-16 mx-auto" />
+            <h4 class="mt-4 font-semibold">2. NGO Accepts</h4>
+            <p class="text-sm text-gray-600 mt-2">Nearby NGOs or volunteers accept the pickup request from the live feed.</p>
+          </div>
+
+          <div class="card p-6 text-center hover-lift">
+            <img src="https://cdn-icons-png.flaticon.com/512/1946/1946436.png" class="w-16 h-16 mx-auto" />
+            <h4 class="mt-4 font-semibold">3. Delivery & Update</h4>
+            <p class="text-sm text-gray-600 mt-2">Food is picked up and delivered — the live feed and map update with photos and timestamps.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DONATE PAGE (with mapping) -->
+     <!-- DONATE SECTION -->
+      <section id="donate" class="page-section max-w-6xl mx-auto px-6 py-14">
+  <div class="card p-6">
+
+    <!-- Heading and Button Row -->
+    <div class="flex justify-between items-center">
+      <h2 class="text-2xl font-bold text-[var(--brand-1)]">Post a Donation</h2>
+
+      <!-- Right-side Button -->
+      <a href="bhandara.html"
+         class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg shadow-md transition">
+        Individual Donation
+      </a>
+    </div>
+
+    <!-- Donation Form -->
+    <form id="donationForm" class="mt-6 space-y-4">
+      <div>
+        <label class="text-sm">Description of donating item:</label>
+        <input name="description" class="w-full p-2 border rounded mt-1" placeholder="Enter item description" />
+      </div>
+      <div>
+        <label class="text-sm">Donated by:</label>
+        <input name="donatedBy" class="w-full p-2 border rounded mt-1" placeholder="Enter Restaurant/Cafe Name" />
+      </div>
+      <div>
+        <label class="text-sm">Donor Name:</label>
+        <input name="donorName" class="w-full p-2 border rounded mt-1" placeholder="Enter Your Name"/>
+      </div>
+      <div>
+        <label class="text-sm">Contact:</label>
+        <input name="contact" class="w-full p-2 border rounded mt-1" placeholder="8796xxx" />
+      </div>
+      <div>
+        <label class="text-sm">Email:</label>
+        <input name="email" class="w-full p-2 border rounded mt-1" placeholder="abc@gmail.com" />
+      </div>
+      <div>
+        <label class="text-sm">Pickup Address:</label>
+        <input name="addr" id="addrInput" class="w-full p-2 border rounded mt-1" placeholder="Enter your address"/>
+      </div>
+      <div>
+        <label for="dob" class="text-sm">Pick-up Date:</label>
+        <input type="date" name="dob" class="w-full p-2 border rounded mt-1" />
+      </div>
+      <div>
+        <label for="time" class="text-sm">Time:</label>
+        <input type="time" class="w-full p-2 border rounded mt-1" />
+      </div>
+
+      <input type="hidden" id="latInput" name="lat">
+      <input type="hidden" id="lngInput" name="lng">
+
+      <button class="px-4 py-2 bg-[var(--brand-1)] text-white rounded-lg">Confirm Donation</button>
+    </form>
+
+  </div>
+
+
+    <!-- ✅ MAP BELOW FORM -->
+   <div class="mt-6">
+      <h3 class="text-sm mb-2">Choose pickup point on map</h3>
+      <div id="map" class="card"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d6589.067090001892!2d77.6359722962975!3d28.974429084707545!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390c668fdea4d87f%3A0x8795def814a486e7!2sMeerut%20Institute%20of%20Engineering%20and%20Technology!5e0!3m2!1sen!2sin!4v1758166794442!5m2!1sen!2sin" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div> </div>
+  </div>
+</section>
+
+              
+    <!-- NGO REGISTRATION -->
+    <section id="register" class="page-section max-w-6xl mx-auto px-6 py-14">
+      <div class="card p-6">
+        <h2 class="text-2xl font-bold text-[var(--brand-1)]">NGO Registration</h2>
+        <p class="text-sm text-gray-600 mt-1">NGOs join to receive donations. We request basic details and optional verification documents.</p>
+
+        <form id="ngoForm" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm font-medium">NGO name</label>
+            <input name="ngoName" required class="w-full mt-1 p-2 border rounded" />
+          </div>
+          <div>
+            <label class="text-sm font-medium">Contact person</label>
+            <input name="contact" required class="w-full mt-1 p-2 border rounded" />
+          </div>
+          <div>
+            <label class="text-sm font-medium">Email</label>
+            <input name="ngoEmail" type="email" required class="w-full mt-1 p-2 border rounded" />
+          </div>
+          <div>
+            <label class="text-sm font-medium">Phone</label>
+            <input name="ngoPhone" class="w-full mt-1 p-2 border rounded" />
+          </div>
+          <div class="col-span-2">
+            <label class="text-sm font-medium">Address</label>
+            <input name="ngoAddr" class="w-full mt-1 p-2 border rounded" />
+          </div>
+
+          <div class="col-span-2">
+            <label class="text-sm font-medium">Upload verification (ID / registration doc / photos)</label>
+            <input name="ngoDocs" type="file" accept="image/*,application/pdf" class="w-full mt-1" />
+            <div class="text-xs text-gray-500 mt-1">Uploads are optional for demo; in production, store and review them securely.</div>
+          </div>
+
+          <div class="col-span-2 flex gap-3 mt-2">
+            <button type="submit" class="px-4 py-2 bg-[var(--brand-1)] text-white rounded-lg">Register NGO</button>
+            <button type="reset" class="px-4 py-2 rounded-lg border">Reset</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- LIVE FEED -->
+    <section id="feed" class="page-section max-w-6xl mx-auto px-6 py-14">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="col-span-2">
+          <h2 class="text-2xl font-bold text-[var(--brand-1)]">Live Feed</h2>
+          <p class="text-sm text-gray-600 mt-1">Real-time updates of donations and pickups. Photo & timestamp included for transparency.</p>
+
+          <div id="feedList" class="mt-6 space-y-4">
+            <!-- entries added by JS -->
+          </div>
+        </div>
+
+        <aside>
+          <div class="card p-4">
+            <h3 class="font-semibold">Counters</h3>
+            <div class="mt-4 grid grid-cols-1 gap-3">
+              <div class="flex items-center justify-between">
+                <div><div class="text-sm text-gray-500">Meals Donated Today</div><div id="counterMeals" class="text-xl font-bold">120</div></div>
+                <div class="text-sm text-gray-500">↗️</div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div><div class="text-sm text-gray-500">NGOs Helped</div><div id="counterNgos" class="text-xl font-bold">10</div></div>
+                <div class="text-sm text-gray-500">📸</div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div><div class="text-sm text-gray-500">Total People Fed</div><div id="counterPeople" class="text-xl font-bold">500+</div></div>
+                <div class="text-sm text-gray-500">❤️</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card p-4 mt-4">
+            <h4 class="font-semibold">Shortcuts</h4>
+            <div class="mt-3 flex flex-col gap-2">
+              <a href="#donate" class="px-3 py-2 rounded bg-[var(--brand-1)] text-white text-center">Post Donation</a>
+              <a href="#register" class="px-3 py-2 rounded border text-center">Register NGO</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- GALLERY -->
+    <section id="gallery" class="page-section max-w-6xl mx-auto px-6 py-14">
+      <h2 class="text-2xl font-bold text-[var(--brand-1)]">Gallery — Our Impact</h2>
+      <p class="text-sm text-gray-600 mt-1">Photos of donations, NGOs, and the people we help (replace with your real photos).</p>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+        <img src="image7.jpg" class="rounded-lg object-cover h-48 w-full shadow" alt="">
+        <img src="image4.webp" class="rounded-lg object-cover h-48 w-full shadow" alt="">
+        <img src="image6.jpg" class="rounded-lg object-cover h-48 w-full shadow" alt="">
+        <img src="image5.webp" class="rounded-lg object-cover h-48 w-full shadow" alt="">
+        <img src="image1.jpg" class="rounded-lg object-cover h-48 w-full shadow" alt="">
+        <img src="photo2.jpg" class="rounded-lg object-cover h-48 w-full shadow" alt="">
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="page-section bg-white py-12 border-t">
+      <div class="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="text-2xl font-bold text-[var(--brand-1)]">Contact & Office</h3>
+          <p class="text-sm text-gray-600 mt-2">Get in touch for partnerships, media, or volunteering.</p>
+
+          <div class="mt-6">
+            <div id="officeMap" class="h-56 rounded-lg"></div>
+            <div class="mt-3 text-sm text-gray-500">Our central hub — sample location shown.</div>
+          </div>
+        </div>
+
+        <div class="card p-6">
+          <h4 class="font-semibold">Contact Form</h4>
+          <form id="contactForm" class="mt-4 space-y-3">
+            <input name="cname" placeholder="Your name" class="w-full p-2 border rounded" required />
+            <input name="cemail" placeholder="Email address" type="email" class="w-full p-2 border rounded" required />
+            <textarea name="cmsg" placeholder="Message" class="w-full p-2 border rounded" rows="5"></textarea>
+            <div class="flex gap-3">
+              <button class="px-4 py-2 bg-[var(--brand-1)] text-white rounded">Send Message</button>
+              <a href="#" class="px-4 py-2 rounded border">Follow on Instagram</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+    
+    <!-- FOOTER -->
+    <footer class="bg-[var(--brand-1)] text-white py-8 mt-10">
+      <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+          <div class="font-bold">Food Connect</div>
+          <div class="text-xs text-white/80">We’ve fed 500+ people with dignity & care.</div>
+        </div>
+        <div class="text-sm">© <span id="year"></span> Food Connect — All rights reserved</div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- JS: carousel, map, simple feed simulation -->
+  <script>
+    // set year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    /* ----------------- HERO CAROUSEL (manual) ----------------- */
+    (function(){
+      const track = document.getElementById('heroCarousel');
+      const items = Array.from(track.children);
+      let idx = 0;
+      function show(i){
+        idx = (i + items.length) % items.length;
+        track.scrollTo({ left: idx * track.clientWidth, behavior: 'smooth' });
+      }
+      document.getElementById('carouselPrev').addEventListener('click', ()=> show(idx-1));
+      document.getElementById('carouselNext').addEventListener('click', ()=> show(idx+1));
+      // auto-advance
+      setInterval(()=> show(idx+1), 5000);
+      // on resize, re-centre
+      window.addEventListener('resize', ()=> show(idx));
+      show(0);
+    })();
+
+    /* ----------------- MAP (Leaflet) ----------------- */
+    const map = L.map('map').setView([28.6139, 77.2090], 12); // sample: New Delhi
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+    // sample NGO locations
+    const ngos = [
+      { name: 'Helping Hands', lat: 28.62, lng: 77.2 },
+      { name: 'Community Kitchen A', lat: 28.61, lng: 77.23 },
+      { name: 'Shelter Care', lat: 28.6, lng: 77.21 }
+    ];
+    ngos.forEach(n=>{
+      L.marker([n.lat, n.lng]).addTo(map).bindPopup(`<strong>${n.name}</strong>`);
+    });
+
+    // allow user to click to create donation marker
+    let donationMarker = null;
+    map.on('click', function(e){
+      if (donationMarker) donationMarker.remove();
+      donationMarker = L.marker(e.latlng, { draggable: true }).addTo(map).bindPopup('Pickup location').openPopup();
+      document.getElementById('latInput').value = e.latlng.lat.toFixed(6);
+      document.getElementById('lngInput').value = e.latlng.lng.toFixed(6);
+      // try reverse-geocoding approximation (not included); just fill address field with coords
+      document.getElementById('addrInput').value = `lat:${e.latlng.lat.toFixed(5)}, lng:${e.latlng.lng.toFixed(5)}`;
+      donationMarker.on('dragend', function(ev){
+        const p = ev.target.getLatLng();
+        document.getElementById('latInput').value = p.lat.toFixed(6);
+        document.getElementById('lngInput').value = p.lng.toFixed(6);
+      });
+    });
+
+    document.getElementById('clearMarker').addEventListener('click', ()=>{
+      if(donationMarker){ donationMarker.remove(); donationMarker = null; document.getElementById('latInput').value=''; document.getElementById('lngInput').value=''; document.getElementById('addrInput').value=''; }
+    });
+
+    /* ------------- NGO OFFICE MAP small -------------- */
+    const off = L.map('officeMap', { attributionControl:false, zoomControl:false }).setView([28.6139,77.2090], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(off);
+    L.marker([28.6139,77.2090]).addTo(off).bindPopup('Food Connect Central Hub');
+
+    /* ----------------- LIVE FEED (simulation) ----------------- */
+    const feedList = document.getElementById('feedList');
+
+    // helper to add feed entry (photo optional)
+    function addFeedFeed({title,desc,photo}){
+      const el = document.createElement('div');
+      el.className = 'card p-4 flex gap-4 items-start hover-lift';
+      el.innerHTML = `
+        <div class="w-28 h-20 rounded overflow-hidden flex-shrink-0">
+          <img src="${photo||'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80'}" class="w-full h-full object-cover"/>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">${new Date().toLocaleString()}</div>
+          <div class="font-semibold text-[var(--brand-1)]">${title}</div>
+          <div class="text-sm text-gray-600 mt-1">${desc}</div>
+        </div>
+      `;
+      feedList.prepend(el);
+      // keep at most 30
+      if(feedList.children.length>30) feedList.removeChild(feedList.lastChild);
+    }
+
+    // initial starter entries
+    addFeedFeed({ title: 'Community Kitchen — 20 meals', desc:'Meals ready for pickup. Veg menu', photo:'https://images.unsplash.com/photo-1517976487492-5750f3195933?auto=format&fit=crop&w=800&q=80' });
+    addFeedFeed({ title: 'Bakery donation — 30 loaves', desc:'Day-old bread, pickup after 5pm', photo:'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80' });
+
+    // donation form submission — demo only, no backend
+    document.getElementById('donationForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const fd = new FormData(this);
+      const title = `${fd.get('name')} — ${fd.get('qty') || fd.get('type')}`;
+      const desc = `${fd.get('type')} • Pickup: ${fd.get('addr')} • At: ${fd.get('time') || 'ASAP'}`;
+      addFeedFeed({ title, desc, photo: null });
+      // update counters (demo)
+      const prevMeals = parseInt(document.getElementById('counterMeals').textContent) || 0;
+      document.getElementById('counterMeals').textContent = prevMeals + (parseInt(fd.get('qty')) || 10);
+      document.getElementById('counterPeople').textContent = (parseInt(document.getElementById('inf1').textContent) + (parseInt(fd.get('qty')) || 10)) + '+';
+      alert('Donation posted to feed (demo).');
+      this.reset();
+      if(donationMarker) { donationMarker.remove(); donationMarker = null; document.getElementById('latInput').value=''; document.getElementById('lngInput').value=''; }
+    });
+
+    // NGO registration form (demo)
+    document.getElementById('ngoForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const fd = new FormData(this);
+      addFeedFeed({ title: `${fd.get('ngoName')} — registered`, desc: `NGO registered: ${fd.get('contact')} • ${fd.get('ngoAddr')}`, photo: null });
+      alert('NGO registration submitted (demo). Our team will verify documents).');
+      this.reset();
+    });
+
+    // contact form (demo)
+    document.getElementById('contactForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      alert('Thanks! Your message was sent (demo).');
+      this.reset();
+    });
+
+    /* ----------------- Small accessibility / UX ----------------- */
+    // scroll to anchor smooth
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', function(ev){
+        const t = document.querySelector(this.getAttribute('href'));
+        if(t){ ev.preventDefault(); t.scrollIntoView({behavior:'smooth'}); }
+      });
+    });
+
+    // simulate periodic donations appearing (demo)
+    setInterval(()=> {
+      const samples = [
+        { title: 'Local Diner — 12 meals', desc:'Cooked meals (non-veg/veg mixed).', photo:'https://images.unsplash.com/photo-1527199392759-6b2a07b6f0a6?auto=format&fit=crop&w=800&q=80' },
+        { title: 'Hotel Pantry — 25 parcels', desc:'Parcelled lunches for shelters.', photo:'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80' },
+        { title: 'Café — 10 sandwiches', desc:'Fresh sandwiches, pickup within 1 hour.', photo:'https://images.unsplash.com/photo-1478145046317-39f10e56b5e9?auto=format&fit=crop&w=800&q=80' },
+      ];
+      const pick = samples[Math.floor(Math.random()*samples.length)];
+      addFeedFeed(pick);
+    }, 18000);
+
+  </script>
+  
